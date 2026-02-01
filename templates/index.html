@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GitHub Library Usage Explorer</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #0f172a;
+        color: #f8fafc;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: linear-gradient(180deg, rgba(15, 23, 42, 1) 0%, rgba(30, 41, 59, 1) 100%);
+      }
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 3rem 1.5rem 4rem;
+      }
+      h1 {
+        font-size: clamp(2rem, 3vw, 2.8rem);
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+      form {
+        display: grid;
+        gap: 1rem;
+        background: rgba(15, 23, 42, 0.65);
+        padding: 1.5rem;
+        border-radius: 1rem;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.55);
+      }
+      label {
+        display: flex;
+        flex-direction: column;
+        font-weight: 600;
+        gap: 0.5rem;
+        color: #e2e8f0;
+      }
+      input,
+      button {
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid rgba(148, 163, 184, 0.4);
+        background: rgba(148, 163, 184, 0.1);
+        color: inherit;
+        font-size: 1rem;
+      }
+      button {
+        cursor: pointer;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        border: none;
+        font-weight: 600;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 15px 35px rgba(79, 70, 229, 0.45);
+      }
+      .error {
+        margin-top: 1.5rem;
+        padding: 1rem 1.25rem;
+        border-radius: 0.75rem;
+        background: rgba(248, 113, 113, 0.15);
+        border: 1px solid rgba(248, 113, 113, 0.35);
+        color: #fecaca;
+      }
+      .results {
+        margin-top: 2.5rem;
+        display: grid;
+        gap: 1.5rem;
+      }
+      article {
+        background: rgba(15, 23, 42, 0.7);
+        border-radius: 1rem;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        padding: 1.5rem;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.45);
+      }
+      article h2 {
+        font-size: 1.15rem;
+        margin: 0 0 0.75rem;
+      }
+      article a {
+        color: #a5b4fc;
+        text-decoration: none;
+      }
+      pre {
+        background: rgba(2, 6, 23, 0.8);
+        padding: 1rem 1.25rem;
+        border-radius: 0.75rem;
+        overflow-x: auto;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        border: 1px solid rgba(100, 116, 139, 0.35);
+      }
+      code {
+        font-family: "JetBrains Mono", "Fira Code", menlo, ui-monospace, SFMono-Regular, SFMono, monospace;
+      }
+      .empty {
+        text-align: center;
+        color: rgba(226, 232, 240, 0.75);
+        font-style: italic;
+      }
+      @media (max-width: 640px) {
+        form {
+          padding: 1.25rem;
+        }
+        article {
+          padding: 1.25rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>GitHub Library Usage Explorer</h1>
+      <form method="post" action="/analyze">
+        <label>
+          Library name
+          <input
+            name="library"
+            placeholder="numpy"
+            value="{{ library if library is not none else '' }}"
+            required
+          />
+        </label>
+        <label>
+          Maximum files to scan
+          <input
+            type="number"
+            min="1"
+            max="20"
+            name="max_files"
+            value="{{ max_files if max_files is not none else 5 }}"
+            required
+          />
+        </label>
+        <button type="submit">Search GitHub</button>
+      </form>
+      {% if error %}
+      <div class="error">{{ error }}</div>
+      {% endif %}
+      {% if results is not none %}
+      <section class="results">
+        {% if results %}
+        {% for block in results %}
+        <article>
+          <h2>
+            <a href="https://github.com/{{ block.repository }}" target="_blank" rel="noreferrer">
+              {{ block.repository }}
+            </a>
+            ·
+            <a href="{{ block.html_url }}#L{{ block.start_line }}" target="_blank" rel="noreferrer">
+              {{ block.file_path }}
+            </a>
+            (lines {{ block.start_line }}-{{ block.end_line }})
+          </h2>
+          <p><strong>Symbol:</strong> {{ block.symbol }}</p>
+          <pre><code>{{ block.snippet | e }}</code></pre>
+        </article>
+        {% endfor %}
+        {% else %}
+        <p class="empty">No usages found for the selected library.</p>
+        {% endif %}
+      </section>
+      {% endif %}
+    </main>
+  </body>
+</html>
